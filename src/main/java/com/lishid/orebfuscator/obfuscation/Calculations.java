@@ -311,20 +311,18 @@ public class Calculations {
 
         // Loop over 16x16x16 chunks in the 16x256x16 column
         int dataIndexModifier = 0;
-        // int extraIndexModifier = 0;
-        // int extraIndexStart = totalChunks * (4096 + 2048 + 2048 + 2048);
+        int extraFirstIndex = ((int)(info.blockSize*2.5));
+        int extraIncrement = 0;
+        boolean extraFirstPart = true;
         int startX = info.chunkX << 4;
         int startZ = info.chunkZ << 4;
-
         for (int i = 0; i < 16; i++) {
             // If the bitmask indicates this chunk is sent...
             if ((info.chunkMask & 1 << i) != 0) {
                 int indexDataStart = dataIndexModifier * 4096;
-                // boolean useExtraData = (info.chunkExtra & 1 << i) > 0;
-                // int indexExtraStart = extraIndexModifier * 2048;
+                boolean useExtraData = (info.extraMask & (1 << i)) > 0;
 
                 int tempIndex = 0;
-
                 OrebfuscatorConfig.shuffleRandomBlocks();
                 for (int y = 0; y < 16; y++) {
                     for (int z = 0; z < 16; z++) {
@@ -335,14 +333,22 @@ public class Calculations {
                             byte data = info.data[info.startIndex + index];
                             int blockY = (i << 4) + y;
 
-                            // byte extra = 0;
-                            // if (useExtraData)
-                            // {
-                            // if (tempIndex % 2 == 0)
-                            // extra = (byte) (info.data[extraIndexStart + indexExtraStart + (tempIndex >> 1)] & 0x0F);
-                            // else
-                            // extra = (byte) (info.data[extraIndexStart + indexExtraStart + (tempIndex >> 1)] >> 4);
-                            // }
+                            int extra = 0;
+                            if(useExtraData)
+                            {
+                                if(extraFirstPart)
+                                    extra = info.data[info.startIndex + extraFirstIndex + extraIncrement] & 0x0F;
+                                else
+                                    extra = info.data[info.startIndex + extraFirstIndex + extraIncrement++] >> 4;
+                                extraFirstPart = !extraFirstPart;
+                            }
+
+                            int blockId = (extra << 8) + (data & 0xFF);
+                            /*Block b = info.player.getWorld().getBlockAt(startX + x, blockY, startZ + z);
+                            if(b.getTypeId() != blockId)
+                            {
+                                System.out.println("BlockID mismatch at "+b.getLocation()+" read "+blockId+" expected "+b.getTypeId());
+                            }*/
 
                             // Initialize data
                             obfuscate = false;
@@ -432,10 +438,8 @@ public class Calculations {
                 }
 
                 dataIndexModifier++;
-                // if(useExtraData)
-                // {
-                // extraIndexModifier++;
-                // }
+                if(useExtraData && !extraFirstPart)
+                    extraFirstIndex++;
             }
         }
 
