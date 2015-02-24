@@ -14,14 +14,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_4_6;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
 
 import com.lishid.orebfuscator.internal.IMinecraftWorldServer;
 import com.lishid.orebfuscator.internal.InternalAccessor;
+import net.minecraft.server.v1_7_R4.WorldServer;
+import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
 
 //Volatile
-import net.minecraft.server.v1_4_6.*;
-import org.bukkit.craftbukkit.v1_4_6.*;
 
 public class MinecraftWorldServer implements IMinecraftWorldServer {
     public void Notify(Object world, int x, int y, int z) {

@@ -14,16 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_7_R2;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import net.minecraft.util.io.netty.channel.Channel;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
 
 import com.lishid.orebfuscator.Orebfuscator;
 import com.lishid.orebfuscator.OrebfuscatorConfig;
@@ -34,10 +25,14 @@ import com.lishid.orebfuscator.internal.InternalAccessor;
 import com.lishid.orebfuscator.obfuscation.Calculations;
 import com.lishid.orebfuscator.obfuscation.MinecraftBlock;
 import com.lishid.orebfuscator.obfuscation.ProximityHider;
+import net.minecraft.server.v1_7_R4.*;
+import net.minecraft.util.io.netty.channel.Channel;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 //Volatile
-import net.minecraft.server.v1_7_R2.*;
-import org.bukkit.craftbukkit.v1_7_R2.entity.CraftPlayer;
 
 public class ChunkQueue extends LinkedList<ChunkCoordIntPair> implements IChunkQueue {
     private static final long serialVersionUID = -1928681564741152336L;
@@ -119,7 +114,7 @@ public class ChunkQueue extends LinkedList<ChunkCoordIntPair> implements IChunkQ
 
     public void sort() {
         // Sort the internal array according to CB - See PlayerChunkMap.movePlayer(EntityPlayer entityplayer)
-        java.util.Collections.sort(internalQueue, new ChunkCoordComparator(player.getHandle()));
+        Collections.sort(internalQueue, new ChunkCoordComparator(player.getHandle()));
     }
 
     @Override
@@ -202,7 +197,7 @@ public class ChunkQueue extends LinkedList<ChunkCoordIntPair> implements IChunkQ
                 if (world.chunkProvider.isChunkLoaded(chunkcoordintpair.x, chunkcoordintpair.z)) {
                     Chunk chunk = world.getChunkAt(chunkcoordintpair.x, chunkcoordintpair.z);
                     // Check if chunk is ready
-                    if (chunk.k()) {
+                    if (chunk.isReady()) {
                         // Load nearby chunks
                         boolean waitLoad = false;
                         if (!checkAndLoadChunk(worldServer, chunkcoordintpair.x - 1, chunkcoordintpair.z)) {

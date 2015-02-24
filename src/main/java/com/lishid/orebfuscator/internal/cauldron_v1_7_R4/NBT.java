@@ -14,17 +14,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_7_R3;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
+
+import com.lishid.orebfuscator.internal.INBT;
+import net.minecraft.server.v1_7_R4.NBTCompressedStreamTools;
+import net.minecraft.server.v1_7_R4.NBTTagCompound;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 
-import com.lishid.orebfuscator.internal.INBT;
-
-
 //Volatile
-import net.minecraft.server.v1_7_R3.*;
 
 public class NBT implements INBT {
     NBTTagCompound nbt = new NBTTagCompound();

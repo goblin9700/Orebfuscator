@@ -14,19 +14,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_4_6;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
+
+import com.lishid.orebfuscator.Orebfuscator;
+import com.lishid.orebfuscator.OrebfuscatorConfig;
+import com.lishid.orebfuscator.internal.IChunkCache;
+import net.minecraft.server.v1_7_R4.RegionFile;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.util.HashMap;
 
-import com.lishid.orebfuscator.Orebfuscator;
-import com.lishid.orebfuscator.OrebfuscatorConfig;
-import com.lishid.orebfuscator.internal.IChunkCache;
-
 //Volatile
-import net.minecraft.server.v1_4_6.*;
 
 public class ChunkCache implements IChunkCache {
     private static final HashMap<File, RegionFile> cachedRegionFiles = new HashMap<File, RegionFile>();

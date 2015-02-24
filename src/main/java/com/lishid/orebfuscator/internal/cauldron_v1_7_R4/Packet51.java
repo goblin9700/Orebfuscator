@@ -14,16 +14,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_7_R1;
-
-import java.util.zip.Deflater;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
 
 import com.lishid.orebfuscator.internal.IPacket51;
 import com.lishid.orebfuscator.internal.InternalAccessor;
 import com.lishid.orebfuscator.utils.ReflectionHelper;
+import net.minecraft.server.v1_7_R4.PacketPlayOutMapChunk;
+
+import java.util.zip.Deflater;
 
 //Volatile
-import net.minecraft.server.v1_7_R1.*;
 
 public class Packet51 implements IPacket51 {
     private static Class<? extends Object> packetClass = PacketPlayOutMapChunk.class;
@@ -37,19 +37,8 @@ public class Packet51 implements IPacket51 {
         if (packet instanceof PacketPlayOutMapChunk) {
             this.packet = (PacketPlayOutMapChunk) packet;
 
-            // Check if e is a byte[]
-            Object e = ReflectionHelper.getPrivateField(packetClass, packet, "e");
-            if (e instanceof byte[]) {
-                // e => buffer
-                // buffer => inflatedBuffer
-                // inflatedBuffer => e
-                buffer = (byte[]) e;
-                inflatedBuffer = (byte[]) ReflectionHelper.getPrivateField(packetClass, packet, "buffer");
-            }
-            else {
-                buffer = (byte[]) ReflectionHelper.getPrivateField(packetClass, packet, "buffer");
-                inflatedBuffer = (byte[]) ReflectionHelper.getPrivateField(packetClass, packet, "inflatedBuffer");
-            }
+            buffer = (byte[]) ReflectionHelper.getPrivateField(packetClass, packet, "field_149281_e");
+            inflatedBuffer = (byte[]) ReflectionHelper.getPrivateField(packetClass, packet, "field_149278_f");
         }
         else {
             InternalAccessor.Instance.PrintError();
@@ -58,22 +47,22 @@ public class Packet51 implements IPacket51 {
 
     @Override
     public int getX() {
-        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "a");
+        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "field_149284_a");
     }
 
     @Override
     public int getZ() {
-        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "b");
+        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "field_149282_b");
     }
 
     @Override
     public int getChunkMask() {
-        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "c");
+        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "field_149283_c");
     }
 
     @Override
     public int getExtraMask() {
-        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "d");
+        return (Integer) ReflectionHelper.getPrivateField(packetClass, packet, "field_149280_d");
     }
 
     @Override
@@ -93,6 +82,6 @@ public class Packet51 implements IPacket51 {
         deflater.reset();
         deflater.setInput(chunkInflatedBuffer, 0, chunkInflatedBuffer.length);
         deflater.finish();
-        ReflectionHelper.setPrivateField(packetClass, packet, "size", deflater.deflate(chunkBuffer));
+        ReflectionHelper.setPrivateField(packetClass, packet, "field_149285_h", deflater.deflate(chunkBuffer));
     }
 }

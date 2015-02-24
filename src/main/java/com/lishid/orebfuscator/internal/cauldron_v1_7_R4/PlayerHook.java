@@ -14,9 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_7_R2;
-
-import java.lang.reflect.Field;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
 
 import com.lishid.orebfuscator.Orebfuscator;
 import com.lishid.orebfuscator.hithack.BlockHitManager;
@@ -25,19 +23,16 @@ import com.lishid.orebfuscator.internal.IPlayerHook;
 import com.lishid.orebfuscator.internal.InternalAccessor;
 import com.lishid.orebfuscator.obfuscation.Calculations;
 import com.lishid.orebfuscator.utils.ReflectionHelper;
-
+import net.minecraft.server.v1_7_R4.NetworkManager;
+import net.minecraft.server.v1_7_R4.PacketPlayInBlockDig;
+import net.minecraft.server.v1_7_R4.PacketPlayOutMapChunk;
+import net.minecraft.util.io.netty.channel.*;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-import net.minecraft.util.io.netty.channel.Channel;
-import net.minecraft.util.io.netty.channel.ChannelHandlerContext;
-import net.minecraft.util.io.netty.channel.ChannelInboundHandlerAdapter;
-import net.minecraft.util.io.netty.channel.ChannelOutboundHandlerAdapter;
-import net.minecraft.util.io.netty.channel.ChannelPromise;
+import java.lang.reflect.Field;
 
 //Volatile
-import net.minecraft.server.v1_7_R2.*;
-
-import org.bukkit.craftbukkit.v1_7_R2.entity.*;
 
 public class PlayerHook implements IPlayerHook {
 
@@ -122,6 +117,6 @@ public class PlayerHook implements IPlayerHook {
 
     public void HookChunkQueue(Player p) {
         CraftPlayer player = (CraftPlayer) p;
-        ReflectionHelper.setPrivateFinal(player.getHandle(), "chunkCoordIntPairQueue", new ChunkQueue(player, player.getHandle().chunkCoordIntPairQueue));
+        ReflectionHelper.setPrivateFinal(player.getHandle(), "field_71129_f", new ChunkQueue(player, player.getHandle().chunkCoordIntPairQueue));
     }
 }

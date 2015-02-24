@@ -14,20 +14,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.lishid.orebfuscator.internal.v1_5_R2;
+package com.lishid.orebfuscator.internal.cauldron_v1_7_R4;
 
 import com.lishid.orebfuscator.internal.IBlockAccess;
+import net.minecraft.server.v1_7_R4.Block;
+import net.minecraft.server.v1_7_R4.Packet;
+import net.minecraft.server.v1_7_R4.TileEntity;
+import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 //Volatile
-import net.minecraft.server.v1_5_R2.*;
-import org.bukkit.craftbukkit.v1_5_R2.entity.*;
-import org.bukkit.craftbukkit.v1_5_R2.*;
 
 public class BlockAccess implements IBlockAccess {
     @Override
     public boolean isBlockTransparent(int id) {
-        return !Block.l(id);
+        return !Block.getById(id).r();
     }
 
     @Override

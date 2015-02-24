@@ -16,9 +16,11 @@
 
 package com.lishid.orebfuscator.internal;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Server;
 
 import com.lishid.orebfuscator.Orebfuscator;
+import org.bukkit.block.Block;
 
 public class InternalAccessor {
     public static InternalAccessor Instance;
@@ -75,7 +77,8 @@ public class InternalAccessor {
 
     private Object createObject(Class<? extends Object> assignableClass, String className) {
         try {
-            Class<?> internalClass = Class.forName("com.lishid.orebfuscator.internal." + version + "." + className);
+            boolean cauldron = Bukkit.getServer().getName().equals("Cauldron-MCPC-Plus");
+            Class<?> internalClass = Class.forName("com.lishid.orebfuscator.internal." + (cauldron?"cauldron_":"") + version + "." + className);
             if (assignableClass.isAssignableFrom(internalClass)) {
                 return internalClass.getConstructor().newInstance();
             }
