@@ -109,10 +109,6 @@ public class OrebfuscatorConfig {
     private static boolean TransparentCached = false;
 
     public static boolean isBlockTransparent(short id) {
-        if (blockAccess == null) {
-            blockAccess = InternalAccessor.Instance.newBlockAccess();
-        }
-
         if (!TransparentCached) {
             // Generate TransparentBlocks by reading them from Minecraft
             generateTransparentBlocks();
@@ -125,6 +121,10 @@ public class OrebfuscatorConfig {
     }
 
     private static void generateTransparentBlocks() {
+        if (blockAccess == null) {
+            blockAccess = InternalAccessor.Instance.newBlockAccess();
+        }
+
         for (int i = 0; i < TransparentBlocks.length; i++) {
             TransparentBlocks[i] = blockAccess.isBlockTransparent(i);
             if(i == org.bukkit.Material.TNT.getId()) {
