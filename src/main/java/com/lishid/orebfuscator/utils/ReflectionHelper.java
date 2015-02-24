@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 import com.lishid.orebfuscator.Orebfuscator;
+import org.bukkit.Bukkit;
 
 public class ReflectionHelper {
     public static Object getPrivateField(Class<? extends Object> c, Object object, String fieldName) {
@@ -29,6 +30,8 @@ public class ReflectionHelper {
             return field.get(object);
         }
         catch (Exception e) {
+            for (Field fd: c.getDeclaredFields())
+                Orebfuscator.logger.severe(fd.toString());
             Orebfuscator.log(e);
         }
         return null;
@@ -45,6 +48,8 @@ public class ReflectionHelper {
             field.set(object, value);
         }
         catch (Exception e) {
+            for (Field fd: c.getDeclaredFields())
+                Orebfuscator.logger.severe(fd.toString());
             Orebfuscator.log(e);
         }
     }
@@ -65,6 +70,8 @@ public class ReflectionHelper {
             field.set(object, value);
         }
         catch (Exception e) {
+            for(Field fd: object.getClass().getDeclaredFields())
+                Orebfuscator.logger.severe(fd.toString());
             Orebfuscator.log(e);
         }
     }
