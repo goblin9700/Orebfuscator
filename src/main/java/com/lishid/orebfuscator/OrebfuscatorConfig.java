@@ -76,16 +76,17 @@ public class OrebfuscatorConfig {
     public static boolean NoObfuscationForPermission = false;
     public static boolean LoginNotification = true;
     public static boolean CheckForUpdates = true;
+    public static int MaxBlockID = 4096;
 
     // Anti Hit Hack
     public static int AntiHitHackDecrementFactor = 1000;
     public static int AntiHitHackMaxViolation = 15;
 
     // Utilities
-    private static boolean[] ObfuscateBlocks = new boolean[256];
-    private static boolean[] NetherObfuscateBlocks = new boolean[256];
-    private static boolean[] DarknessBlocks = new boolean[256];
-    private static boolean[] ProximityHiderBlocks = new boolean[256];
+    private static boolean[] ObfuscateBlocks = new boolean[MaxBlockID];
+    private static boolean[] NetherObfuscateBlocks = new boolean[MaxBlockID];
+    private static boolean[] DarknessBlocks = new boolean[MaxBlockID];
+    private static boolean[] ProximityHiderBlocks = new boolean[MaxBlockID];
     private static Integer[] RandomBlocks = new Integer[] { 1, 4, 5, 14, 15, 16, 21, 46, 48, 49, 56, 73, 82, 129 };
     private static Integer[] NetherRandomBlocks = new Integer[] { 13, 87, 88, 112, 153 };
     private static Integer[] RandomBlocks2 = RandomBlocks;
@@ -459,6 +460,11 @@ public class OrebfuscatorConfig {
         CheckForUpdates = getBoolean("Booleans.CheckForUpdates", CheckForUpdates);
 
         // Read block lists
+        MaxBlockID = getInt("Integers.MaxBlockID", MaxBlockID);
+        ObfuscateBlocks = changeSize(ObfuscateBlocks, MaxBlockID);
+        NetherObfuscateBlocks = changeSize(NetherObfuscateBlocks, MaxBlockID);
+        DarknessBlocks = changeSize(DarknessBlocks, MaxBlockID);
+        ProximityHiderBlocks = changeSize(ProximityHiderBlocks, MaxBlockID);
         generateTransparentBlocks();
         setBlockValues(ObfuscateBlocks, getIntList("Lists.ObfuscateBlocks", Arrays.asList(new Integer[] { 14, 15, 16, 21, 54, 56, 73, 74, 129, 130 })), false);
         setBlockValues(NetherObfuscateBlocks, getIntList("Lists.NetherObfuscateBlocks", Arrays.asList(new Integer[] { 87, 153 })), false);
@@ -485,6 +491,18 @@ public class OrebfuscatorConfig {
         RandomBlocks2 = RandomBlocks;
 
         save();
+    }
+
+    public static boolean[] changeSize(boolean[] array, int newSize)
+    {
+        if(array.length == newSize) return array;
+        return Arrays.copyOf(array, newSize);
+    }
+
+    public static <T> T[] changeSize(T[] array, int newSize)
+    {
+        if(array.length == newSize) return array;
+        return Arrays.copyOf(array, newSize);
     }
 
     private static void overrideBlockValues(boolean[] boolArray, List<Integer> blocks)
