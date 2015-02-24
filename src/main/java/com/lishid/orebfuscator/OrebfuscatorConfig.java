@@ -22,8 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import net.minecraft.server.Material;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -131,6 +130,7 @@ public class OrebfuscatorConfig {
                 TransparentBlocks[i] = false;
             }
         }
+        overrideBlockValues(TransparentBlocks, getIntList("Lists.TransparentBlocks", Arrays.asList(new Integer[]{8,9})));
         TransparentCached = true;
     }
 
@@ -384,12 +384,18 @@ public class OrebfuscatorConfig {
                 boolArray[i] = false;
             }
         }
+        for(int id: blocks)
+            if(id > boolArray.length || id < 0)
+                Orebfuscator.logger.warning("Failed to register block ID "+id+". The maximum supported ID is "+TransparentBlocks.length);
     }
 
     private static void setBlockValues(boolean[] boolArray, List<Integer> blocks) {
         for (int i = 0; i < boolArray.length; i++) {
             boolArray[i] = blocks.contains(i);
         }
+        for(int id: blocks)
+            if(id > boolArray.length || id < 0)
+                Orebfuscator.logger.warning("Failed to register block ID "+id+". The maximum supported ID is "+TransparentBlocks.length);
     }
 
     public static void load() {
@@ -453,10 +459,11 @@ public class OrebfuscatorConfig {
         CheckForUpdates = getBoolean("Booleans.CheckForUpdates", CheckForUpdates);
 
         // Read block lists
+        generateTransparentBlocks();
         setBlockValues(ObfuscateBlocks, getIntList("Lists.ObfuscateBlocks", Arrays.asList(new Integer[] { 14, 15, 16, 21, 54, 56, 73, 74, 129, 130 })), false);
         setBlockValues(NetherObfuscateBlocks, getIntList("Lists.NetherObfuscateBlocks", Arrays.asList(new Integer[] { 87, 153 })), false);
         setBlockValues(DarknessBlocks, getIntList("Lists.DarknessBlocks", Arrays.asList(new Integer[] { 52, 54 })));
-        setBlockValues(ProximityHiderBlocks, getIntList("Lists.ProximityHiderBlocks", Arrays.asList(new Integer[] { 23, 52, 54, 56, 58, 61, 62, 116, 129, 130, 145, 146 })));
+        setBlockValues(ProximityHiderBlocks, getIntList("Lists.ProximityHiderBlocks", Arrays.asList(new Integer[]{23, 52, 54, 56, 58, 61, 62, 116, 129, 130, 145, 146})));
 
         // Disable worlds
         DisabledWorlds = getStringList("Lists.DisabledWorlds", DisabledWorlds);
@@ -478,6 +485,15 @@ public class OrebfuscatorConfig {
         RandomBlocks2 = RandomBlocks;
 
         save();
+    }
+
+    private static void overrideBlockValues(boolean[] boolArray, List<Integer> blocks)
+    {
+        for(Integer id: blocks)
+            if(id > 0 && id < boolArray.length)
+                boolArray[id] = true;
+            else
+                Orebfuscator.logger.warning("Failed to register block ID "+id+". The maximum supported ID is "+TransparentBlocks.length);
     }
 
     public static void reload() {
