@@ -94,7 +94,7 @@ public class BlockUpdate {
     }
 
     public static void AddBlockCheck(HashSet<Block> allBlocks, Block block) {
-        if ((OrebfuscatorConfig.isObfuscated((byte) block.getTypeId(), block.getWorld().getEnvironment() == Environment.NETHER) || OrebfuscatorConfig.isDarknessObfuscated((byte) block.getTypeId()))) {
+        if ((OrebfuscatorConfig.isObfuscated(block.getTypeId(), block.getWorld().getEnvironment() == Environment.NETHER) || OrebfuscatorConfig.isDarknessObfuscated(block.getTypeId()))) {
             allBlocks.add(block);
         }
     }

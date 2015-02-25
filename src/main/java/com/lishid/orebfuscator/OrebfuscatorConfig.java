@@ -105,17 +105,22 @@ public class OrebfuscatorConfig {
     }
 
     public static IBlockAccess blockAccess;
-    private static boolean[] TransparentBlocks = new boolean[256];
+    private static boolean[] TransparentBlocks = new boolean[MaxBlockID];
     private static boolean TransparentCached = false;
 
+    @Deprecated
     public static boolean isBlockTransparent(short id) {
+        if(id < 0) id += 256;
+        return isBlockTransparent((int) id);
+    }
+
+    public static boolean isBlockTransparent(int id) {
         if (!TransparentCached) {
             // Generate TransparentBlocks by reading them from Minecraft
             generateTransparentBlocks();
         }
 
-        if (id < 0)
-            id += 256;
+        if(id >= MaxBlockID) return false;
 
         return TransparentBlocks[id];
     }
@@ -135,9 +140,15 @@ public class OrebfuscatorConfig {
         TransparentCached = true;
     }
 
+    @Deprecated
     public static boolean isObfuscated(short id, boolean nether) {
-        if (id < 0)
-            id += 256;
+        if(id < 0) id += 256;
+        return isObfuscated((int) id, nether);
+    }
+
+
+    public static boolean isObfuscated(int id, boolean nether) {
+        if(id >= MaxBlockID) return false;
 
         // Nether case
         if (nether) {
@@ -153,18 +164,34 @@ public class OrebfuscatorConfig {
         return ObfuscateBlocks[id];
     }
 
+    @Deprecated
     public static boolean isDarknessObfuscated(short id) {
-        if (id < 0)
-            id += 256;
+        if(id < 0) id += 256;
+        return isDarknessObfuscated((int)id);
+    }
 
+    public static boolean isDarknessObfuscated(int id) {
+        if(id >= MaxBlockID) return false;
         return DarknessBlocks[id];
     }
 
+    @Deprecated
     public static boolean isProximityObfuscated(int y, short id) {
+        if(id < 0) id+=256;
+        return isProximityObfuscated(y, (int)id);
+    }
+
+    public static boolean isProximityObfuscated(int y, int id) {
         return proximityHiderChecker.isProximityObfuscated(y, id);
     }
-    
+
+    @Deprecated
     public static boolean isProximityHiderOn(int y, short id) {
+        if(id < 0) id+=256;
+        return proximityHiderChecker.isProximityHiderOn(y, (int) id);
+    }
+
+    public static boolean isProximityHiderOn(int y, int id) {
         return proximityHiderChecker.isProximityHiderOn(y, id);
     }
     
@@ -183,14 +210,24 @@ public class OrebfuscatorConfig {
     public static ProximityHiderChecker proximityHiderChecker = new ProximityHiderChecker();
     
     public static class ProximityHiderChecker {
-        public boolean isProximityObfuscated(int y, short id) {
-            if (id < 0)
-                id += 256;
 
+        @Deprecated
+        public boolean isProximityObfuscated(int y, short id) {
+            if(id < 0) id+=256;
+            return isProximityObfuscated(y, (int)id);
+        }
+
+        public boolean isProximityObfuscated(int y, int id) {
+            if(id >= MaxBlockID) return false;
             return ProximityHiderBlocks[id];
         }
-        
+
+        @Deprecated
         public boolean isProximityHiderOn(int y, short id) {
+            return isProximityHiderOn(y, (int) id);
+        }
+
+        public boolean isProximityHiderOn(int y, int id) {
             return (UseYLocationProximity && y >= ProximityHiderEnd) ||
                     (!UseYLocationProximity && y <= ProximityHiderEnd);
         }
@@ -224,10 +261,11 @@ public class OrebfuscatorConfig {
         return retval.length() > 1 ? retval.substring(0, retval.length() - 2) : retval;
     }
 
+    //TODO 4096 BlockID support
     public static byte getRandomBlock(int index, boolean alternate, boolean nether) {
         if (nether)
-            return (byte) (int) (NetherRandomBlocks[index]);
-        return (byte) (int) (alternate ? RandomBlocks2[index] : RandomBlocks[index]);
+            return (byte) (NetherRandomBlocks[index] & 0xFF);
+        return (byte)((alternate ? RandomBlocks2[index] : RandomBlocks[index]) & 0xFF);
     }
 
     public static Integer[] getRandomBlocks(boolean alternate, boolean nether) {
@@ -380,7 +418,7 @@ public class OrebfuscatorConfig {
             boolArray[i] = blocks.contains(i);
 
             // If block is transparent while we don't want them to, or the other way around
-            if (transparent != isBlockTransparent((short) i)) {
+            if (transparent != isBlockTransparent(i)) {
                 // Remove it
                 boolArray[i] = false;
             }
@@ -465,6 +503,7 @@ public class OrebfuscatorConfig {
         NetherObfuscateBlocks = changeSize(NetherObfuscateBlocks, MaxBlockID);
         DarknessBlocks = changeSize(DarknessBlocks, MaxBlockID);
         ProximityHiderBlocks = changeSize(ProximityHiderBlocks, MaxBlockID);
+        TransparentBlocks = changeSize(TransparentBlocks, MaxBlockID);
         generateTransparentBlocks();
         setBlockValues(ObfuscateBlocks, getIntList("Lists.ObfuscateBlocks", Arrays.asList(new Integer[] { 14, 15, 16, 21, 54, 56, 73, 74, 129, 130 })), false);
         setBlockValues(NetherObfuscateBlocks, getIntList("Lists.NetherObfuscateBlocks", Arrays.asList(new Integer[] { 87, 153 })), false);
@@ -484,7 +523,7 @@ public class OrebfuscatorConfig {
         // Validate RandomBlocks
         for (int i = 0; i < RandomBlocks.length; i++) {
             // Don't want people to put chests and other stuff that lags the hell out of players.
-            if (RandomBlocks[i] == null || OrebfuscatorConfig.isBlockTransparent((short) (int) RandomBlocks[i])) {
+            if (RandomBlocks[i] == null || OrebfuscatorConfig.isBlockTransparent(RandomBlocks[i])) {
                 RandomBlocks[i] = 1;
             }
         }

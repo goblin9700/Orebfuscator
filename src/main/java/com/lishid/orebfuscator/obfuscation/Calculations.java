@@ -311,7 +311,7 @@ public class Calculations {
 
         // Loop over 16x16x16 chunks in the 16x256x16 column
         int dataIndexModifier = 0;
-        int extraFirstIndex = ((int)(info.blockSize*2.5));
+        int extraFirstIndex = (int)(info.blockSize*2.5);
         int extraIncrement = 0;
         boolean extraFirstPart = true;
         int startX = info.chunkX << 4;
@@ -355,11 +355,11 @@ public class Calculations {
                             specialObfuscate = false;
 
                             // Check if the block should be obfuscated for the default engine modes
-                            if (OrebfuscatorConfig.isObfuscated(data, isNether)) {
+                            if (OrebfuscatorConfig.isObfuscated(blockId, isNether)) {
                                 if (initialRadius == 0) {
                                     // Do not interfere with PH
-                                    if (OrebfuscatorConfig.UseProximityHider && OrebfuscatorConfig.isProximityObfuscated(blockY, data)) {
-                                        if (!areAjacentBlocksTransparent(info, data, startX + x, blockY, startZ + z, 1)) {
+                                    if (OrebfuscatorConfig.UseProximityHider && OrebfuscatorConfig.isProximityObfuscated(blockY, blockId)) {
+                                        if (!areAdjacentBlocksTransparent(info, blockId, startX + x, blockY, startZ + z, 1)) {
                                             obfuscate = true;
                                         }
                                     }
@@ -370,15 +370,15 @@ public class Calculations {
                                 }
                                 else {
                                     // Check if any nearby blocks are transparent
-                                    if (!areAjacentBlocksTransparent(info, data, startX + x, blockY, startZ + z, initialRadius)) {
+                                    if (!areAdjacentBlocksTransparent(info, blockId, startX + x, blockY, startZ + z, initialRadius)) {
                                         obfuscate = true;
                                     }
                                 }
                             }
 
                             // Check if the block should be obfuscated because of proximity check
-                            if (!obfuscate && OrebfuscatorConfig.UseProximityHider && OrebfuscatorConfig.isProximityObfuscated(blockY, data)) {
-                                if (OrebfuscatorConfig.isProximityHiderOn(blockY, data)) {
+                            if (!obfuscate && OrebfuscatorConfig.UseProximityHider && OrebfuscatorConfig.isProximityObfuscated(blockY, blockId)) {
+                                if (OrebfuscatorConfig.isProximityHiderOn(blockY, blockId)) {
                                     Block block = CalculationsUtil.getBlockAt(info.player.getWorld(), startX + x, blockY, startZ + z);
                                     if (block != null) {
                                         proximityBlocks.add(block);
@@ -393,6 +393,7 @@ public class Calculations {
                             if (obfuscate) {
                                 if (specialObfuscate) {
                                     // Proximity hider
+                                    //TODO 4096 BlockID replacement support
                                     info.buffer[index] = (byte) OrebfuscatorConfig.ProximityHiderID;
                                 }
                                 else {
@@ -400,12 +401,14 @@ public class Calculations {
 
                                     if (engineMode == 1) {
                                         // Engine mode 1, replace with stone
+                                        //TODO 4096 BlockID replacement support
                                         info.buffer[index] = (byte) (isNether ? 87 : 1);
                                     }
                                     else if (engineMode == 2) {
                                         // Ending mode 2, replace with random block
                                         if (randomBlocksLength > 1)
                                             randomIncrement = CalculationsUtil.increment(randomIncrement, randomBlocksLength);
+                                        //TODO 4096 BlockID replacement support
                                         info.buffer[index] = OrebfuscatorConfig.getRandomBlock(randomIncrement, randomAlternate, isNether);
                                         randomAlternate = !randomAlternate;
                                     }
@@ -417,6 +420,7 @@ public class Calculations {
                                         }
 
                                         if (ramdomCave > 0) {
+                                            //TODO 4096 BlockID replacement support
                                             info.buffer[index] = 0;
                                             ramdomCave--;
                                         }
@@ -425,9 +429,10 @@ public class Calculations {
                             }
 
                             // Check if the block should be obfuscated because of the darkness
-                            if (!obfuscate && OrebfuscatorConfig.DarknessHideBlocks && OrebfuscatorConfig.isDarknessObfuscated(data)) {
-                                if (!areAjacentBlocksBright(info, startX + x, (i << 4) + y, startZ + z, 1)) {
+                            if (!obfuscate && OrebfuscatorConfig.DarknessHideBlocks && OrebfuscatorConfig.isDarknessObfuscated(blockId)) {
+                                if (!areAdjacentBlocksBright(info, startX + x, (i << 4) + y, startZ + z, 1)) {
                                     // Hide block, setting it to air
+                                    //TODO 4096 BlockID replacement support
                                     info.buffer[index] = 0;
                                 }
                             }
@@ -560,32 +565,17 @@ public class Calculations {
         }
     }
 
+    @Deprecated
     public static boolean areAjacentBlocksTransparent(ChunkInfo info, byte currentBlockID, int x, int y, int z, int countdown) {
-        byte id = 0;
-        boolean foundID = false;
+        return areAdjacentBlocksTransparent(info, (int) currentBlockID, x, y, z, countdown);
+    }
 
-        if (y >= info.world.getMaxHeight() || y < 0)
-            return true;
+    public static boolean areAdjacentBlocksTransparent(ChunkInfo info, int currentBlockID, int x, int y, int z, int countdown) {
+        Integer id = info.getBlockId(x, y, z);
 
-        int section = info.chunkSectionToIndexMap[y >> 4];
-
-        if ((info.chunkMask & (1 << (y >> 4))) > 0 && x >> 4 == info.chunkX && z >> 4 == info.chunkZ) {
-            int cX = ((x % 16) < 0) ? (x % 16 + 16) : (x % 16);
-            int cZ = ((z % 16) < 0) ? (z % 16 + 16) : (z % 16);
-
-            int index = section * 4096 + (y % 16 << 8) + (cZ << 4) + cX;
-            try {
-                id = info.data[info.startIndex + index];
-                foundID = true;
-            }
-            catch (Exception e) {
-                Orebfuscator.log(e);
-            }
-        }
-
-        if (!foundID) {
+        if (id == null) {
             if (CalculationsUtil.isChunkLoaded(info.world, x >> 4, z >> 4)) {
-                id = (byte) info.world.getBlockTypeIdAt(x, y, z);
+                id = info.world.getBlockTypeIdAt(x, y, z);
             }
             else {
                 id = 1;
@@ -600,23 +590,32 @@ public class Calculations {
         if (countdown == 0)
             return false;
 
-        if (areAjacentBlocksTransparent(info, currentBlockID, x, y + 1, z, countdown - 1))
+        if (areAdjacentBlocksTransparent(info, currentBlockID, x, y + 1, z, countdown - 1))
             return true;
-        if (areAjacentBlocksTransparent(info, currentBlockID, x, y - 1, z, countdown - 1))
+        if (areAdjacentBlocksTransparent(info, currentBlockID, x, y - 1, z, countdown - 1))
             return true;
-        if (areAjacentBlocksTransparent(info, currentBlockID, x + 1, y, z, countdown - 1))
+        if (areAdjacentBlocksTransparent(info, currentBlockID, x + 1, y, z, countdown - 1))
             return true;
-        if (areAjacentBlocksTransparent(info, currentBlockID, x - 1, y, z, countdown - 1))
+        if (areAdjacentBlocksTransparent(info, currentBlockID, x - 1, y, z, countdown - 1))
             return true;
-        if (areAjacentBlocksTransparent(info, currentBlockID, x, y, z + 1, countdown - 1))
+        if (areAdjacentBlocksTransparent(info, currentBlockID, x, y, z + 1, countdown - 1))
             return true;
-        if (areAjacentBlocksTransparent(info, currentBlockID, x, y, z - 1, countdown - 1))
+        if (areAdjacentBlocksTransparent(info, currentBlockID, x, y, z - 1, countdown - 1))
             return true;
 
         return false;
     }
 
+    /**
+     * @deprecated Typo in method name.
+     * @see com.lishid.orebfuscator.obfuscation.Calculations#areAdjacentBlocksBright(ChunkInfo, int, int, int, int)
+     */
+    @Deprecated
     public static boolean areAjacentBlocksBright(ChunkInfo info, int x, int y, int z, int countdown) {
+        return areAdjacentBlocksBright(info, x, y, z, countdown);
+    }
+
+    public static boolean areAdjacentBlocksBright(ChunkInfo info, int x, int y, int z, int countdown) {
         if (CalculationsUtil.isChunkLoaded(info.world, x >> 4, z >> 4)) {
             if (info.world.getBlockAt(x, y, z).getLightLevel() > 0) {
                 return true;
@@ -629,17 +628,17 @@ public class Calculations {
         if (countdown == 0)
             return false;
 
-        if (areAjacentBlocksBright(info, x, y + 1, z, countdown - 1))
+        if (areAdjacentBlocksBright(info, x, y + 1, z, countdown - 1))
             return true;
-        if (areAjacentBlocksBright(info, x, y - 1, z, countdown - 1))
+        if (areAdjacentBlocksBright(info, x, y - 1, z, countdown - 1))
             return true;
-        if (areAjacentBlocksBright(info, x + 1, y, z, countdown - 1))
+        if (areAdjacentBlocksBright(info, x + 1, y, z, countdown - 1))
             return true;
-        if (areAjacentBlocksBright(info, x - 1, y, z, countdown - 1))
+        if (areAdjacentBlocksBright(info, x - 1, y, z, countdown - 1))
             return true;
-        if (areAjacentBlocksBright(info, x, y, z + 1, countdown - 1))
+        if (areAdjacentBlocksBright(info, x, y, z + 1, countdown - 1))
             return true;
-        if (areAjacentBlocksBright(info, x, y, z - 1, countdown - 1))
+        if (areAdjacentBlocksBright(info, x, y, z - 1, countdown - 1))
             return true;
 
         return false;
