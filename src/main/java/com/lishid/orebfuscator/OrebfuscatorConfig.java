@@ -62,6 +62,7 @@ public class OrebfuscatorConfig {
     public static int ProximityHiderRate = 500;
     public static int ProximityHiderDistance = 8;
     public static int ProximityHiderID = 1;
+    public static int ProximityHiderID255 = 1;
     public static int ProximityHiderEnd = 255;
     public static boolean UseProximityHider = true;
     public static boolean UseSpecialBlockForProximityHider = true;
@@ -89,7 +90,9 @@ public class OrebfuscatorConfig {
     private static boolean[] ProximityHiderBlocks = new boolean[MaxBlockID];
     private static Integer[] RandomBlocks = new Integer[] { 1, 4, 5, 14, 15, 16, 21, 46, 48, 49, 56, 73, 82, 129 };
     private static Integer[] NetherRandomBlocks = new Integer[] { 13, 87, 88, 112, 153 };
-    private static Integer[] RandomBlocks2 = RandomBlocks;
+    private static Integer[] RandomBlocks2 = RandomBlocks.clone();
+    private static Integer[] RandomBlocks256 = RandomBlocks.clone();
+    private static Integer[] NetherRandomBlocks256 = NetherRandomBlocks.clone();
     private static List<String> DisabledWorlds = new ArrayList<String>();
 
     public static File getCacheFolder() {
@@ -208,7 +211,14 @@ public class OrebfuscatorConfig {
     }
     
     public static ProximityHiderChecker proximityHiderChecker = new ProximityHiderChecker();
-    
+
+    public static Integer getProximityHiderID(boolean limitedBlockIdRange)
+    {
+        if(!limitedBlockIdRange)
+            return ProximityHiderID;
+        return ProximityHiderID255;
+    }
+
     public static class ProximityHiderChecker {
 
         @Deprecated
@@ -261,23 +271,44 @@ public class OrebfuscatorConfig {
         return retval.length() > 1 ? retval.substring(0, retval.length() - 2) : retval;
     }
 
+    /**
+     * @deprecated Doesn't support 4096 IDs and isn't really random
+     */
     //TODO 4096 BlockID support
+    @Deprecated
     public static byte getRandomBlock(int index, boolean alternate, boolean nether) {
         if (nether)
             return (byte) (NetherRandomBlocks[index] & 0xFF);
         return (byte)((alternate ? RandomBlocks2[index] : RandomBlocks[index]) & 0xFF);
     }
 
+    public static int getRandomBlock(boolean nether, boolean limitedBlockIdRange)
+    {
+        Integer[] blocks = nether?(limitedBlockIdRange?NetherRandomBlocks256:NetherRandomBlocks):(limitedBlockIdRange?RandomBlocks256:RandomBlocks);
+        return blocks[random.nextInt(blocks.length)];
+    }
+
+    public static Integer[] getRandomBlocksExtended(boolean limitedBlockIdRange, boolean nether){
+        return nether?(limitedBlockIdRange?NetherRandomBlocks256:NetherRandomBlocks):(limitedBlockIdRange?RandomBlocks256:RandomBlocks);
+    }
+
+    /**
+     * @deprecated Doesn't support 4096 IDs and isn't really random
+     */
+    @Deprecated
     public static Integer[] getRandomBlocks(boolean alternate, boolean nether) {
         if (nether)
-            return NetherRandomBlocks;
-        return (alternate ? RandomBlocks2 : RandomBlocks);
+            return NetherRandomBlocks256;
+        return (alternate ? RandomBlocks256 : RandomBlocks2);
     }
 
     public static void shuffleRandomBlocks() {
         synchronized (RandomBlocks) {
             Collections.shuffle(Arrays.asList(RandomBlocks));
             Collections.shuffle(Arrays.asList(RandomBlocks2));
+            Collections.shuffle(Arrays.asList(RandomBlocks256));
+            Collections.shuffle(Arrays.asList(NetherRandomBlocks));
+            Collections.shuffle(Arrays.asList(NetherRandomBlocks256));
         }
     }
 
@@ -480,6 +511,7 @@ public class OrebfuscatorConfig {
         ProximityHiderDistance = clamp(getInt("Integers.ProximityHiderDistance", ProximityHiderDistance), 2, 64);
 
         ProximityHiderID = getInt("Integers.ProximityHiderID", ProximityHiderID);
+        ProximityHiderID255 = clamp(getInt("Integers.ProximityHiderIDUpTo255", ProximityHiderID255), 0, 255);
         ProximityHiderEnd = clamp(getInt("Integers.ProximityHiderEnd", ProximityHiderEnd), 0, 255);
         AirGeneratorMaxChance = clamp(getInt("Integers.AirGeneratorMaxChance", AirGeneratorMaxChance), 40, 100);
         OrebfuscatorPriority = clamp(getInt("Integers.OrebfuscatorPriority", OrebfuscatorPriority), Thread.MIN_PRIORITY, Thread.MAX_PRIORITY);
@@ -524,10 +556,25 @@ public class OrebfuscatorConfig {
         for (int i = 0; i < RandomBlocks.length; i++) {
             // Don't want people to put chests and other stuff that lags the hell out of players.
             if (RandomBlocks[i] == null || OrebfuscatorConfig.isBlockTransparent(RandomBlocks[i])) {
+                Orebfuscator.logger.warning("Attempted to set "+RandomBlocks[i]+" as RandomBlock but it's transparent.");
                 RandomBlocks[i] = 1;
             }
         }
-        RandomBlocks2 = RandomBlocks;
+
+        List<Integer> list = new ArrayList<Integer>(RandomBlocks.length);
+        for(int id: RandomBlocks)
+            if(id < 256 && id > 0) list.add(id);
+        if(list.isEmpty())
+            list.add(1);
+        RandomBlocks256 = list.toArray(new Integer[list.size()]);
+
+        list.clear();
+        for(int id: NetherRandomBlocks)
+            if(id < 256 && id > 0) list.add(id);
+        if(list.isEmpty())
+            list.add(87);
+        NetherRandomBlocks256 = list.toArray(new Integer[list.size()]);
+        RandomBlocks2 = RandomBlocks256.clone();
 
         save();
     }

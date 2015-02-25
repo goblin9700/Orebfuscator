@@ -295,8 +295,6 @@ public class Calculations {
         }
 
         // Track of pseudo-randomly assigned randomBlock
-        int randomIncrement = 0;
-        int randomIncrement2 = 0;
         int ramdomCave = 0;
         // Track of whether a block should be obfuscated or not
         boolean obfuscate = false;
@@ -306,7 +304,6 @@ public class Calculations {
         int maxChance = OrebfuscatorConfig.AirGeneratorMaxChance;
         int incrementMax = maxChance;
 
-        int randomBlocksLength = OrebfuscatorConfig.getRandomBlocks(false, isNether).length;
         boolean randomAlternate = false;
 
         // Loop over 16x16x16 chunks in the 16x256x16 column
@@ -332,14 +329,15 @@ public class Calculations {
                             int index = indexDataStart + tempIndex;
                             byte data = info.data[info.startIndex + index];
                             int blockY = (i << 4) + y;
+                            int extraIndex = 0;
 
                             int extra = 0;
                             if(useExtraData)
                             {
                                 if(extraFirstPart)
-                                    extra = info.data[info.startIndex + extraFirstIndex + extraIncrement] & 0x0F;
+                                    extra = info.data[extraIndex = (info.startIndex + extraFirstIndex + extraIncrement)] & 0x0F;
                                 else
-                                    extra = info.data[info.startIndex + extraFirstIndex + extraIncrement++] >> 4;
+                                    extra = info.data[extraIndex = (info.startIndex + extraFirstIndex + extraIncrement++)] >> 4;
                                 extraFirstPart = !extraFirstPart;
                             }
 
@@ -390,38 +388,32 @@ public class Calculations {
                             }
 
                             // Check if the block is obfuscated
+                            Integer obfuscatedId = null;
                             if (obfuscate) {
                                 if (specialObfuscate) {
                                     // Proximity hider
-                                    //TODO 4096 BlockID replacement support
-                                    info.buffer[index] = (byte) OrebfuscatorConfig.ProximityHiderID;
+                                    obfuscatedId = OrebfuscatorConfig.getProximityHiderID(!useExtraData);
                                 }
                                 else {
-                                    randomIncrement2 = OrebfuscatorConfig.random(incrementMax);// CalculationsUtil.increment(randomIncrement2, incrementMax);
-
-                                    if (engineMode == 1) {
-                                        // Engine mode 1, replace with stone
-                                        //TODO 4096 BlockID replacement support
-                                        info.buffer[index] = (byte) (isNether ? 87 : 1);
-                                    }
-                                    else if (engineMode == 2) {
+                                    if (engineMode == 2) {
                                         // Ending mode 2, replace with random block
-                                        if (randomBlocksLength > 1)
-                                            randomIncrement = CalculationsUtil.increment(randomIncrement, randomBlocksLength);
-                                        //TODO 4096 BlockID replacement support
-                                        info.buffer[index] = OrebfuscatorConfig.getRandomBlock(randomIncrement, randomAlternate, isNether);
+                                        obfuscatedId = OrebfuscatorConfig.getRandomBlock(isNether, !useExtraData);
                                         randomAlternate = !randomAlternate;
                                     }
+                                    else {
+                                        // Engine mode 1, replace with stone
+                                        obfuscatedId = (isNether ? 87 : 1);
+                                    }
+
                                     // Anti texturepack and freecam
                                     if (OrebfuscatorConfig.AntiTexturePackAndFreecam) {
                                         // Add random air blocks
-                                        if (randomIncrement2 == 0) {
+                                        if (OrebfuscatorConfig.random(incrementMax) == 0) {
                                             ramdomCave = 1 + OrebfuscatorConfig.random(3);
                                         }
 
                                         if (ramdomCave > 0) {
-                                            //TODO 4096 BlockID replacement support
-                                            info.buffer[index] = 0;
+                                            obfuscatedId = 0;
                                             ramdomCave--;
                                         }
                                     }
@@ -432,8 +424,25 @@ public class Calculations {
                             if (!obfuscate && OrebfuscatorConfig.DarknessHideBlocks && OrebfuscatorConfig.isDarknessObfuscated(blockId)) {
                                 if (!areAdjacentBlocksBright(info, startX + x, (i << 4) + y, startZ + z, 1)) {
                                     // Hide block, setting it to air
-                                    //TODO 4096 BlockID replacement support
-                                    info.buffer[index] = 0;
+                                    obfuscatedId = 0;
+                                }
+                            }
+
+                            if(obfuscatedId != null)
+                            {
+                                if(!useExtraData){
+                                    info.buffer[index] = obfuscatedId.byteValue();
+                                }
+                                else
+                                {
+                                    byte part0 = (byte)(obfuscatedId & 0xFF);
+                                    byte part1 = (byte)(obfuscatedId >> 8);
+                                    info.buffer[index] = part0;
+                                    // TODO Add the second part of block id to the cache
+                                    if(!extraFirstPart)
+                                        info.data[extraIndex] = (byte) ((info.data[extraIndex] & 0xF0) | (part1 & 0x0F));
+                                    else
+                                        info.data[extraIndex] = (byte) ((info.data[extraIndex] & 0x0F) | (part1 >> 4));
                                 }
                             }
 
